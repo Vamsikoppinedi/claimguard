@@ -8,7 +8,7 @@ function App() {
 
   // 🔹 API CALL
   const analyze = async () => {
-    const response = await fetch("http://localhost:8080/analyze-note", {
+    const response = await fetch("https://claimguard-nsbr.onrender.com/analyze-note", {
       method: "POST",
       headers: {
         "Content-Type": "application/json"
