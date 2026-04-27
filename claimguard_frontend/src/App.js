@@ -1,166 +1,86 @@
 import React, { useState } from "react";
-import jsPDF from "jspdf";
+import { BrowserRouter as Router, Routes, Route, Link } from "react-router-dom";
+import Terms from "./Terms";
 import "./App.css";
 
-function App() {
+function Home() {
   const [note, setNote] = useState("");
   const [result, setResult] = useState(null);
 
-  // 🔹 API CALL
   const analyze = async () => {
-    const response = await fetch("https://claimguard-nsbr.onrender.com/analyze-note", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({ note })
-    });
+    const response = await fetch(
+      "https://claimguard-nsbr.onrender.com/analyze-note",
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ note }),
+      }
+    );
 
     const data = await response.json();
     setResult(data);
   };
 
-  // 🔹 PDF DOWNLOAD
-  const downloadPDF = () => {
-    const doc = new jsPDF();
-  
-    let y = 10;
-  
-    doc.setFontSize(16);
-    doc.text("ClaimGuard AI Report", 10, y);
-  
-    y += 10;
-  
-    doc.setFontSize(12);
-  
-    const noteLines = doc.splitTextToSize(`Patient Note: ${note}`, 180);
-    doc.text(noteLines, 10, y);
-  
-    y += noteLines.length * 7;
-  
-    doc.text(`Risk: ${result.risk}`, 10, y);
-    y += 7;
-  
-    doc.text(`Revenue Impact: ${result.revenueImpact}`, 10, y);
-    y += 7;
-  
-    doc.text(`Completeness: ${result.completeness}%`, 10, y);
-    y += 10;
-  
-    doc.text("Pre-Adjudication Checks:", 10, y);
-    y += 7;
-  
-    doc.text(`Eligible: ${result.eligible ? "Yes" : "No"}`, 10, y);
-    y += 7;
-  
-    doc.text(`Provider: ${result.validProvider ? "Yes" : "No"}`, 10, y);
-    y += 7;
-  
-    doc.text(`Codes: ${result.validCodes ? "Yes" : "No"}`, 10, y);
-    y += 10;
-  
-    doc.text(`Final Decision: ${result.finalDecision}`, 10, y);
-    y += 10;
-  
-    doc.text("Missing Elements:", 10, y);
-    y += 7;
-  
-    if (result.missing_elements.length === 0) {
-      doc.text("None", 10, y);
-      y += 7;
-    } else {
-      result.missing_elements.forEach((item) => {
-        doc.text(`- ${item}`, 10, y);
-        y += 7;
-      });
-    }
-  
-    y += 5;
-  
-    doc.text("Suggestions:", 10, y);
-    y += 7;
-  
-    if (result.suggestions.length === 0) {
-      doc.text("No suggestions — documentation complete", 10, y);
-    } else {
-      result.suggestions.forEach((item) => {
-        doc.text(`- ${item}`, 10, y);
-        y += 7;
-      });
-    }
-  
-    doc.save("ClaimGuard_Report.pdf");
-  };
-
   return (
-    <div className="container">
+    <div style={{ padding: "20px" }}>
       <h1>ClaimGuard AI</h1>
 
-      {/* INPUT */}
       <textarea
+        placeholder="Enter patient note..."
         value={note}
         onChange={(e) => setNote(e.target.value)}
-        placeholder="Paste clinical note here..."
-        className="textarea"
+        style={{ width: "100%", height: "120px" }}
       />
 
-      <button onClick={analyze} className="button">
-        Analyze
-      </button>
+      <br />
+      <br />
 
-      {/* RESULT */}
+      <button onClick={analyze}>Analyze</button>
+
+      <p style={{ fontSize: "12px", color: "gray", marginTop: "10px" }}>
+        Do not enter real patient data. This tool is for testing and educational use only.
+      </p>
+
       {result && (
-        <div className="result">
+        <div style={{ marginTop: "20px" }}>
           <h2>Result</h2>
+          <p><b>Risk:</b> {result.risk}</p>
+          <p><b>Score:</b> {result.score}</p>
+          <p><b>Completeness:</b> {result.completeness}%</p>
 
-          {/* 🔹 Risk */}
-          <h3 className={result.risk === "HIGH" ? "risk-high" : "risk-low"}>
-            Risk: {result.risk}
-          </h3>
-
-          {/* 🔹 Business Metrics */}
-          <p>
-            <b>Potential Revenue Loss:</b> {result.revenueImpact}
-          </p>
-
-          <p>
-            <b>Documentation Completeness:</b> {result.completeness}%
-          </p>
-
-          {/* 🔹 Pre-Adjudication */}
-          <h4>Pre-Adjudication Checks:</h4>
+          <h3>Missing Elements:</h3>
           <ul>
-            <li>Patient Eligible: {result.eligible ? "Yes" : "No"}</li>
-            <li>Valid Provider: {result.validProvider ? "Yes" : "No"}</li>
-            <li>Valid Codes: {result.validCodes ? "Yes" : "No"}</li>
-          </ul>
-
-          {/* 🔹 Adjudication */}
-          <h3>
-            Final Decision: {result.finalDecision}
-          </h3>
-
-          {/* 🔹 Details */}
-          <h4>Missing Elements:</h4>
-          <ul>
-            {result.missing_elements.map((item, index) => (
-              <li key={index}>{item}</li>
+            {result.missing_elements.map((item, i) => (
+              <li key={i}>{item}</li>
             ))}
           </ul>
 
-          <h4>Suggestions:</h4>
+          <h3>Suggestions:</h3>
           <ul>
-            {result.suggestions.map((item, index) => (
-              <li key={index}>{item}</li>
+            {result.suggestions.map((item, i) => (
+              <li key={i}>{item}</li>
             ))}
           </ul>
-
-          <button onClick={downloadPDF} className="button">
-            Download PDF
-          </button>
         </div>
       )}
+
+      <footer style={{ marginTop: "40px", fontSize: "12px", color: "gray" }}>
+        <Link to="/terms">Terms of Service</Link>
+      </footer>
     </div>
+  );
+}
+
+function App() {
+  return (
+    <Router>
+      <Routes>
+        <Route path="/" element={<Home />} />
+        <Route path="/terms" element={<Terms />} />
+      </Routes>
+    </Router>
   );
 }
 
