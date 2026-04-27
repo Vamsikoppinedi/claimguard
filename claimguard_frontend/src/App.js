@@ -1,86 +1,120 @@
 import React, { useState } from "react";
-import { BrowserRouter as Router, Routes, Route, Link } from "react-router-dom";
-import Terms from "./Terms";
+import { SignedIn, SignedOut, SignInButton, UserButton } from "@clerk/clerk-react";
+import jsPDF from "jspdf";
 import "./App.css";
 
-function Home() {
+function App() {
   const [note, setNote] = useState("");
   const [result, setResult] = useState(null);
 
   const analyze = async () => {
-    const response = await fetch(
-      "https://claimguard-nsbr.onrender.com/analyze-note",
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ note }),
-      }
-    );
+    const response = await fetch("https://claimguard-nsbr.onrender.com/analyze-note", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({ note })
+    });
 
     const data = await response.json();
     setResult(data);
   };
 
+  const downloadPDF = () => {
+    const doc = new jsPDF();
+
+    let y = 10;
+
+    doc.setFontSize(16);
+    doc.text("ClaimGuard AI Report", 10, y);
+
+    y += 10;
+
+    doc.setFontSize(12);
+    const noteLines = doc.splitTextToSize(`Patient Note: ${note}`, 180);
+    doc.text(noteLines, 10, y);
+
+    y += noteLines.length * 7;
+
+    doc.text(`Risk: ${result.risk}`, 10, y);
+    y += 7;
+
+    doc.text(`Revenue Impact: ${result.revenueImpact}`, 10, y);
+    y += 7;
+
+    doc.text(`Completeness: ${result.completeness}%`, 10, y);
+    y += 10;
+
+    doc.text("Pre-Adjudication Checks:", 10, y);
+    y += 7;
+
+    doc.text(`Eligible: ${result.eligible ? "Yes" : "No"}`, 10, y);
+    y += 7;
+
+    doc.text(`Valid Provider: ${result.validProvider ? "Yes" : "No"}`, 10, y);
+    y += 7;
+
+    doc.text(`Valid Codes: ${result.validCodes ? "Yes" : "No"}`, 10, y);
+
+    doc.save("claim-report.pdf");
+  };
+
   return (
-    <div style={{ padding: "20px" }}>
+    <div className="App">
+      <div style={{ position: "absolute", top: 10, right: 20 }}>
+        <SignedOut>
+          <SignInButton />
+        </SignedOut>
+
+        <SignedIn>
+          <UserButton />
+        </SignedIn>
+      </div>
+
       <h1>ClaimGuard AI</h1>
 
-      <textarea
-        placeholder="Enter patient note..."
-        value={note}
-        onChange={(e) => setNote(e.target.value)}
-        style={{ width: "100%", height: "120px" }}
-      />
-
-      <br />
-      <br />
-
-      <button onClick={analyze}>Analyze</button>
-
-      <p style={{ fontSize: "12px", color: "gray", marginTop: "10px" }}>
+      <p style={{ color: "red", fontSize: "14px" }}>
         Do not enter real patient data. This tool is for testing and educational use only.
       </p>
 
+      <textarea
+        placeholder="Enter clinical note..."
+        value={note}
+        onChange={(e) => setNote(e.target.value)}
+      />
+
+      <SignedOut>
+        <p>Please sign in to use ClaimGuard AI</p>
+      </SignedOut>
+
+      <SignedIn>
+        <button onClick={analyze}>Analyze</button>
+      </SignedIn>
+
       {result && (
-        <div style={{ marginTop: "20px" }}>
+        <div>
           <h2>Result</h2>
-          <p><b>Risk:</b> {result.risk}</p>
-          <p><b>Score:</b> {result.score}</p>
-          <p><b>Completeness:</b> {result.completeness}%</p>
+          <p><strong>Risk:</strong> {result.risk}</p>
+          <p><strong>Revenue Impact:</strong> {result.revenueImpact}</p>
+          <p><strong>Completeness:</strong> {result.completeness}%</p>
 
-          <h3>Missing Elements:</h3>
+          <h3>Pre-Adjudication Checks</h3>
           <ul>
-            {result.missing_elements.map((item, i) => (
-              <li key={i}>{item}</li>
-            ))}
+            <li>Eligible: {result.eligible ? "Yes" : "No"}</li>
+            <li>Valid Provider: {result.validProvider ? "Yes" : "No"}</li>
+            <li>Valid Codes: {result.validCodes ? "Yes" : "No"}</li>
           </ul>
 
-          <h3>Suggestions:</h3>
-          <ul>
-            {result.suggestions.map((item, i) => (
-              <li key={i}>{item}</li>
-            ))}
-          </ul>
+          <button onClick={downloadPDF}>Download PDF</button>
         </div>
       )}
 
-      <footer style={{ marginTop: "40px", fontSize: "12px", color: "gray" }}>
-        <Link to="/terms">Terms of Service</Link>
+      <footer style={{ marginTop: "40px" }}>
+        <a href="https://www.termsfeed.com/live/" target="_blank" rel="noreferrer">
+          Terms of Service
+        </a>
       </footer>
     </div>
-  );
-}
-
-function App() {
-  return (
-    <Router>
-      <Routes>
-        <Route path="/" element={<Home />} />
-        <Route path="/terms" element={<Terms />} />
-      </Routes>
-    </Router>
   );
 }
 
