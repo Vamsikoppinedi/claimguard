@@ -195,7 +195,7 @@ function App() {
       )}
 
       <br />
-      <a href="#">Terms of Service</a>
+      <a href="/terms">Terms of Service</a>
     </div>
   );
 }
