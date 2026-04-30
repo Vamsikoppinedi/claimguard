@@ -19,7 +19,7 @@ public class AnalyzeService {
         int present = 0;
         int total = 5;
 
-        // 🔹 Document Checks
+        // 🔹 Document Checks (Improved Logic)
 
         if (text.contains("chief complaint")) {
             present++;
@@ -42,7 +42,12 @@ public class AnalyzeService {
             suggestions.add("Add exam findings");
         }
 
-        if (text.contains("assessment")) {
+        // 🔥 FIXED: Assessment detection (important)
+        if (
+                text.contains("assessment") ||
+                text.contains("diagnosis") ||
+                text.contains("impression")
+        ) {
             present++;
         } else {
             missing.add("Assessment");
@@ -57,9 +62,9 @@ public class AnalyzeService {
         }
 
         // 🔹 Completeness %
-        int completeness = (present * 100) / total;
+        double completeness = ((double) present / total) * 100;
 
-        // 🔹 Score (missing count based)
+        // 🔹 Score
         int score = total - present;
 
         // 🔹 Revenue Impact
@@ -72,10 +77,10 @@ public class AnalyzeService {
             revenueImpact = "$0–$50 per claim";
         }
 
-        // 🔹 Risk
+        // 🔹 Risk (Better logic)
         String risk;
-        if (score >= 3) risk = "HIGH";
-        else if (score >= 1) risk = "MEDIUM";
+        if (present <= 2) risk = "HIGH";
+        else if (present <= 4) risk = "MEDIUM";
         else risk = "LOW";
 
         // 🔥 Pre-Adjudication Checks
@@ -110,7 +115,7 @@ public class AnalyzeService {
 
         AnalyzeResponse response = new AnalyzeResponse(risk, score, missing, suggestions);
 
-        response.setCompleteness(completeness);
+        response.setCompleteness((int) completeness);
         response.setRevenueImpact(revenueImpact);
 
         response.eligible = eligible;
