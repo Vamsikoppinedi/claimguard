@@ -130,7 +130,7 @@ function App() {
 
       {/* 📄 Terms */}
       <p style={{ textAlign: "center", marginTop: "30px" }}>
-        <a href="#" target="_blank">Terms of Service</a>
+        <a href="/terms" target="_blank">Terms of Service</a>
       </p>
     </div>
   );
