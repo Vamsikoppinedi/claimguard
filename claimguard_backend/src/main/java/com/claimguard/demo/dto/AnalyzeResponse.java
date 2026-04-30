@@ -4,38 +4,25 @@ import java.util.List;
 
 public class AnalyzeResponse {
 
-    private String risk;
-    private int score;
-    private List<String> missing_elements;
-    private List<String> suggestions;
+    public String risk;
+    public int score;
+    public List<String> missing;
+    public List<String> suggestions;
+
     private int completeness;
     private String revenueImpact;
-    public boolean eligible;
-public boolean validProvider;
-public boolean validCodes;
-public String finalDecision;
 
-    public AnalyzeResponse(String risk, int score, List<String> missing_elements, List<String> suggestions) {
+    // NEW fields
+    public boolean eligible;
+    public boolean validProvider;
+    public boolean validCodes;
+    public String finalDecision;
+
+    public AnalyzeResponse(String risk, int score, List<String> missing, List<String> suggestions) {
         this.risk = risk;
         this.score = score;
-        this.missing_elements = missing_elements;
+        this.missing = missing;
         this.suggestions = suggestions;
-    }
-
-    public String getRisk() {
-        return risk;
-    }
-
-    public int getScore() {
-        return score;
-    }
-
-    public List<String> getMissing_elements() {
-        return missing_elements;
-    }
-
-    public List<String> getSuggestions() {
-        return suggestions;
     }
 
     public int getCompleteness() {

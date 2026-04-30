@@ -19,7 +19,7 @@ public class AnalyzeService {
         int present = 0;
         int total = 5;
 
-        // 🔹 Document Checks (Improved Logic)
+        // ✅ Document Checks
 
         if (text.contains("chief complaint")) {
             present++;
@@ -42,7 +42,6 @@ public class AnalyzeService {
             suggestions.add("Add exam findings");
         }
 
-        // 🔥 FIXED: Assessment detection (important)
         if (
                 text.contains("assessment") ||
                 text.contains("diagnosis") ||
@@ -61,13 +60,13 @@ public class AnalyzeService {
             suggestions.add("Add treatment plan");
         }
 
-        // 🔹 Completeness %
-        double completeness = ((double) present / total) * 100;
+        // ✅ Completeness
+        int completeness = (present * 100) / total;
 
-        // 🔹 Score
+        // ✅ Score
         int score = total - present;
 
-        // 🔹 Revenue Impact
+        // ✅ Revenue Impact
         String revenueImpact;
         if (score >= 3) {
             revenueImpact = "$100–$300 per claim";
@@ -77,14 +76,13 @@ public class AnalyzeService {
             revenueImpact = "$0–$50 per claim";
         }
 
-        // 🔹 Risk (Better logic)
+        // ✅ Risk
         String risk;
         if (present <= 2) risk = "HIGH";
         else if (present <= 4) risk = "MEDIUM";
         else risk = "LOW";
 
-        // 🔥 Pre-Adjudication Checks
-
+        // ✅ Pre-checks
         boolean eligible = text.contains("insured");
 
         boolean validProvider =
@@ -97,8 +95,7 @@ public class AnalyzeService {
                 text.contains("cpt") ||
                 text.contains("code");
 
-        // 🔥 Final Decision
-
+        // ✅ Final Decision
         String finalDecision;
 
         if (!eligible || !validProvider || !validCodes) {
@@ -111,11 +108,10 @@ public class AnalyzeService {
             finalDecision = "APPROVED";
         }
 
-        // 🔹 Build Response
-
+        // ✅ Response
         AnalyzeResponse response = new AnalyzeResponse(risk, score, missing, suggestions);
 
-        response.setCompleteness((int) completeness);
+        response.setCompleteness(completeness);
         response.setRevenueImpact(revenueImpact);
 
         response.eligible = eligible;
