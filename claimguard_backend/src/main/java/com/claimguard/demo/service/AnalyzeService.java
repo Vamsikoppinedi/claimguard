@@ -15,49 +15,58 @@ public class AnalyzeService {
 
         List<String> missing = new ArrayList<>();
         List<String> suggestions = new ArrayList<>();
-        int score = 0;
+
+        int present = 0;
+        int total = 5;
 
         // 🔹 Document Checks
 
-        if (!text.contains("chief complaint")) {
+        if (text.contains("chief complaint")) {
+            present++;
+        } else {
             missing.add("Chief Complaint");
             suggestions.add("Add reason for visit");
-            score += 2;
         }
 
-        if (!text.contains("hpi")) {
+        if (text.contains("hpi")) {
+            present++;
+        } else {
             missing.add("HPI");
             suggestions.add("Add history of present illness");
-            score += 2;
         }
 
-        if (!text.contains("exam")) {
+        if (text.contains("exam")) {
+            present++;
+        } else {
             missing.add("Physical Exam");
             suggestions.add("Add exam findings");
-            score += 2;
         }
 
-        if (!text.contains("assessment")) {
+        if (text.contains("assessment")) {
+            present++;
+        } else {
             missing.add("Assessment");
             suggestions.add("Add diagnosis/impression");
-            score += 2;
         }
 
-        if (!text.contains("plan")) {
+        if (text.contains("plan") || text.contains("treatment")) {
+            present++;
+        } else {
             missing.add("Plan");
             suggestions.add("Add treatment plan");
-            score += 2;
         }
 
         // 🔹 Completeness %
-        int maxScore = 15;
-        int completeness = ((maxScore - score) * 100) / maxScore;
+        int completeness = (present * 100) / total;
+
+        // 🔹 Score (missing count based)
+        int score = total - present;
 
         // 🔹 Revenue Impact
         String revenueImpact;
-        if (score >= 8) {
+        if (score >= 3) {
             revenueImpact = "$100–$300 per claim";
-        } else if (score >= 4) {
+        } else if (score >= 1) {
             revenueImpact = "$50–$150 per claim";
         } else {
             revenueImpact = "$0–$50 per claim";
@@ -65,25 +74,25 @@ public class AnalyzeService {
 
         // 🔹 Risk
         String risk;
-        if (score >= 8) risk = "HIGH";
-        else if (score >= 4) risk = "MEDIUM";
+        if (score >= 3) risk = "HIGH";
+        else if (score >= 1) risk = "MEDIUM";
         else risk = "LOW";
 
-        // 🔥 NEW: Pre-Adjudication Checks
+        // 🔥 Pre-Adjudication Checks
 
         boolean eligible = text.contains("insured");
 
-boolean validProvider =
-        text.contains("doctor") ||
-        text.contains("provider") ||
-        text.contains("physician");
+        boolean validProvider =
+                text.contains("doctor") ||
+                text.contains("provider") ||
+                text.contains("physician");
 
-boolean validCodes =
-        text.contains("icd") ||
-        text.contains("cpt") ||
-        text.contains("code");
+        boolean validCodes =
+                text.contains("icd") ||
+                text.contains("cpt") ||
+                text.contains("code");
 
-        // 🔥 NEW: Final Decision (Adjudication)
+        // 🔥 Final Decision
 
         String finalDecision;
 
@@ -104,7 +113,6 @@ boolean validCodes =
         response.setCompleteness(completeness);
         response.setRevenueImpact(revenueImpact);
 
-        // 🔥 NEW fields
         response.eligible = eligible;
         response.validProvider = validProvider;
         response.validCodes = validCodes;
