@@ -1,119 +1,107 @@
-import React, { useState } from "react";
-import { SignedIn, SignedOut, SignInButton, UserButton } from "@clerk/clerk-react";
-import jsPDF from "jspdf";
-import "./App.css";
+import React, { useState, useEffect } from "react";
+import { useUser, SignedOut, SignInButton } from "@clerk/clerk-react";
 
 function App() {
+  const { user, isSignedIn } = useUser();
+
   const [note, setNote] = useState("");
   const [result, setResult] = useState(null);
+  const [count, setCount] = useState(0);
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    if (user) {
+      const saved = localStorage.getItem(user.id);
+      setCount(saved ? parseInt(saved) : 0);
+    }
+  }, [user]);
 
   const analyze = async () => {
-    const response = await fetch("https://claimguard-nsbr.onrender.com/analyze-note", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({ note })
-    });
+    if (!note.trim()) return;
+    if (count >= 5) return;
 
-    const data = await response.json();
-    setResult(data);
+    setLoading(true);
+
+    try {
+      const response = await fetch("https://claimguard-nsbr.onrender.com/analyze-note", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({ note })
+      });
+
+      const data = await response.json();
+      setResult(data);
+
+      const newCount = count + 1;
+      setCount(newCount);
+      localStorage.setItem(user.id, newCount);
+    } catch (e) {
+      console.error(e);
+    }
+
+    setLoading(false);
   };
 
-  const downloadPDF = () => {
-    const doc = new jsPDF();
-
-    let y = 10;
-
-    doc.setFontSize(16);
-    doc.text("ClaimGuard AI Report", 10, y);
-
-    y += 10;
-
-    doc.setFontSize(12);
-    const noteLines = doc.splitTextToSize(`Patient Note: ${note}`, 180);
-    doc.text(noteLines, 10, y);
-
-    y += noteLines.length * 7;
-
-    doc.text(`Risk: ${result.risk}`, 10, y);
-    y += 7;
-
-    doc.text(`Revenue Impact: ${result.revenueImpact}`, 10, y);
-    y += 7;
-
-    doc.text(`Completeness: ${result.completeness}%`, 10, y);
-    y += 10;
-
-    doc.text("Pre-Adjudication Checks:", 10, y);
-    y += 7;
-
-    doc.text(`Eligible: ${result.eligible ? "Yes" : "No"}`, 10, y);
-    y += 7;
-
-    doc.text(`Valid Provider: ${result.validProvider ? "Yes" : "No"}`, 10, y);
-    y += 7;
-
-    doc.text(`Valid Codes: ${result.validCodes ? "Yes" : "No"}`, 10, y);
-
-    doc.save("claim-report.pdf");
-  };
+  if (!isSignedIn) {
+    return (
+      <div style={{ textAlign: "center", marginTop: "100px" }}>
+        <h1>ClaimGuard AI</h1>
+        <SignInButton />
+      </div>
+    );
+  }
 
   return (
-    <div className="App">
-      <div style={{ position: "absolute", top: 10, right: 20 }}>
-        <SignedOut>
-          <SignInButton />
-        </SignedOut>
+    <div style={{ maxWidth: "800px", margin: "auto", padding: "20px", fontFamily: "Arial" }}>
+      <h1 style={{ textAlign: "center" }}>ClaimGuard AI</h1>
 
-        <SignedIn>
-          <UserButton />
-        </SignedIn>
-      </div>
+      <p style={{ color: "red", textAlign: "center", fontSize: "14px" }}>
+        ⚠️ Do not enter real patient data. This tool is for testing and educational use only.
+      </p>
 
-      <h1>ClaimGuard AI</h1>
-
-      <p style={{ color: "red", fontSize: "14px" }}>
-        Do not enter real patient data. This tool is for testing and educational use only.
+      <p style={{ textAlign: "right", fontSize: "14px" }}>
+        {count} / 5 free analyses used
       </p>
 
       <textarea
-        placeholder="Enter clinical note..."
+        rows="5"
+        style={{ width: "100%", padding: "10px", marginTop: "10px" }}
+        placeholder="Enter patient note..."
         value={note}
         onChange={(e) => setNote(e.target.value)}
       />
 
-      <SignedOut>
-        <p>Please sign in to use ClaimGuard AI</p>
-      </SignedOut>
+      <button
+        onClick={analyze}
+        style={{ marginTop: "10px", padding: "10px 20px", backgroundColor: "#007bff", color: "white", border: "none" }}
+      >
+        Analyze
+      </button>
 
-      <SignedIn>
-        <button onClick={analyze}>Analyze</button>
-      </SignedIn>
+      {loading && <p>Analyzing...</p>}
 
       {result && (
-        <div>
-          <h2>Result</h2>
-          <p><strong>Risk:</strong> {result.risk}</p>
-          <p><strong>Revenue Impact:</strong> {result.revenueImpact}</p>
-          <p><strong>Completeness:</strong> {result.completeness}%</p>
-
-          <h3>Pre-Adjudication Checks</h3>
-          <ul>
-            <li>Eligible: {result.eligible ? "Yes" : "No"}</li>
-            <li>Valid Provider: {result.validProvider ? "Yes" : "No"}</li>
-            <li>Valid Codes: {result.validCodes ? "Yes" : "No"}</li>
-          </ul>
-
-          <button onClick={downloadPDF}>Download PDF</button>
+        <div style={{ marginTop: "20px", padding: "15px", border: "1px solid #ccc" }}>
+          <h3>Risk: {result.risk}</h3>
+          <p>Documentation Completeness: {result.completeness}%</p>
         </div>
       )}
 
-      <footer style={{ marginTop: "40px" }}>
-        <a href="https://www.termsfeed.com/live/" target="_blank" rel="noreferrer">
-          Terms of Service
-        </a>
-      </footer>
+      {count >= 5 && (
+        <div style={{ marginTop: "20px", textAlign: "center" }}>
+          <h3>Upgrade Required</h3>
+          <p>Unlock unlimited analyses for $99/month</p>
+          <button style={{ padding: "10px 20px", backgroundColor: "green", color: "white", border: "none" }}>
+            Upgrade
+          </button>
+        </div>
+      )}
+
+      <div style={{ textAlign: "center", marginTop: "30px" }}>
+        <a href="/terms">Terms of Service</a>
+      </div>
     </div>
   );
 }
