@@ -1,9 +1,10 @@
-import React, { useEffect, useState } from "react";
+import React, { useState, useEffect } from "react";
 
 function App() {
   const [note, setNote] = useState("");
   const [result, setResult] = useState(null);
 
+  // Free usage counter
   const [count, setCount] = useState(() => {
     return Number(localStorage.getItem("usageCount")) || 0;
   });
@@ -12,6 +13,7 @@ function App() {
     localStorage.setItem("usageCount", count);
   }, [count]);
 
+  // 🔥 ANALYZE FUNCTION (IMPORTANT)
   const analyze = async () => {
     if (!note.trim()) {
       alert("Please enter a note");
@@ -24,38 +26,27 @@ function App() {
     }
 
     try {
-      const response = await fetch("https://claimguard-nsbr.onrender.com/analyze-note", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ note }),
-      });
+      const response = await fetch(
+        "https://claimguard-nsbr.onrender.com/analyze-note",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ note }),
+        }
+      );
 
       const data = await response.json();
-      console.log("API RESPONSE:", data);
+
+      console.log("API RESPONSE:", data); // DEBUG
 
       setResult(data);
       setCount(count + 1);
     } catch (error) {
-      console.error("Analyze error:", error);
-      alert("Something went wrong. Please try again.");
+      console.error("Error:", error);
+      alert("Error calling backend");
     }
-  };
-
-  const downloadPDF = async () => {
-    if (!result) return;
-
-    const { jsPDF } = await import("jspdf");
-    const doc = new jsPDF();
-
-    doc.text("ClaimGuard AI Report", 10, 10);
-    doc.text(`Risk: ${result.risk}`, 10, 25);
-    doc.text(`Documentation Completeness: ${result.completeness}%`, 10, 35);
-    doc.text(`Potential Revenue Loss: ${result.revenueImpact}`, 10, 45);
-    doc.text(`Final Decision: ${result.finalDecision}`, 10, 55);
-
-    doc.save("ClaimGuard_Report.pdf");
   };
 
   return (
@@ -63,11 +54,12 @@ function App() {
       <h1>ClaimGuard AI</h1>
 
       <p style={{ color: "red" }}>
-        ⚠ Do not enter real patient data. This tool is for testing only.
+        ⚠ Do not enter real patient data. For testing only.
       </p>
 
       <p>{count} / 5 free analyses used</p>
 
+      {/* TEXT INPUT */}
       <textarea
         rows="7"
         style={{ width: "100%", marginBottom: "10px" }}
@@ -78,28 +70,48 @@ function App() {
 
       <br />
 
+      {/* ANALYZE BUTTON */}
       <button onClick={analyze}>Analyze</button>
 
+      {/* RESULT SECTION */}
       {result && (
-        <div style={{ marginTop: "20px", border: "1px solid #ccc", padding: "10px" }}>
+        <div
+          style={{
+            marginTop: "20px",
+            border: "1px solid #ccc",
+            padding: "10px",
+          }}
+        >
           <h3>Result</h3>
 
           <p><b>Risk:</b> {result.risk}</p>
-          <p><b>Documentation Completeness:</b> {result.completeness}%</p>
+
+          <p>
+            <b>Documentation Completeness:</b>{" "}
+            {result.completeness !== undefined ? result.completeness : 0}%
+          </p>
+
           <p><b>Potential Revenue Loss:</b> {result.revenueImpact}</p>
 
           <div>
             <b>Pre-Adjudication Checks:</b>
             <ul>
-              <li>Patient Eligible: {result.eligible ? "Yes" : "No"}</li>
-              <li>Valid Provider: {result.validProvider ? "Yes" : "No"}</li>
-              <li>Valid Codes: {result.validCodes ? "Yes" : "No"}</li>
+              <li>
+                Patient Eligible: {result.eligible ? "Yes" : "No"}
+              </li>
+              <li>
+                Valid Provider: {result.validProvider ? "Yes" : "No"}
+              </li>
+              <li>
+                Valid Codes: {result.validCodes ? "Yes" : "No"}
+              </li>
             </ul>
           </div>
 
           <p><b>Final Decision:</b> {result.finalDecision}</p>
 
-          {result.missing?.length > 0 && (
+          {/* Missing */}
+          {result.missing && result.missing.length > 0 && (
             <>
               <p><b>Missing Elements:</b></p>
               <ul>
@@ -110,7 +122,8 @@ function App() {
             </>
           )}
 
-          {result.suggestions?.length > 0 && (
+          {/* Suggestions */}
+          {result.suggestions && result.suggestions.length > 0 && (
             <>
               <p><b>Suggestions:</b></p>
               <ul>
@@ -121,14 +134,12 @@ function App() {
             </>
           )}
 
-          <button onClick={downloadPDF}>Download PDF</button>
+          {/* DEBUG */}
+          <p style={{ fontSize: "10px", color: "gray" }}>
+            DEBUG: {JSON.stringify(result)}
+          </p>
         </div>
       )}
-
-      <br />
-      <br />
-
-      <a href="/terms">Terms of Service</a>
     </div>
   );
 }
