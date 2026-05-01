@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from "react";
+import { useUser, SignOutButton, SignInButton } from "@clerk/clerk-react";
 
 function App() {
   const [note, setNote] = useState("");
   const [result, setResult] = useState(null);
 
-  // Free usage counter
+  const { isSignedIn, user } = useUser();
+
   const [count, setCount] = useState(() => {
     return Number(localStorage.getItem("usageCount")) || 0;
   });
@@ -13,10 +15,14 @@ function App() {
     localStorage.setItem("usageCount", count);
   }, [count]);
 
-  // 🔥 ANALYZE FUNCTION (IMPORTANT)
   const analyze = async () => {
     if (!note.trim()) {
       alert("Please enter a note");
+      return;
+    }
+
+    if (!isSignedIn) {
+      alert("Please sign in first");
       return;
     }
 
@@ -39,12 +45,12 @@ function App() {
 
       const data = await response.json();
 
-      console.log("API RESPONSE:", data); // DEBUG
+      console.log("API RESPONSE:", data);
 
       setResult(data);
       setCount(count + 1);
     } catch (error) {
-      console.error("Error:", error);
+      console.error(error);
       alert("Error calling backend");
     }
   };
@@ -53,13 +59,29 @@ function App() {
     <div style={{ maxWidth: "800px", margin: "40px auto", padding: "20px" }}>
       <h1>ClaimGuard AI</h1>
 
+      {/* AUTH SECTION */}
+      <div style={{ marginBottom: "15px" }}>
+        {!isSignedIn ? (
+          <SignInButton>
+            <button>Sign In</button>
+          </SignInButton>
+        ) : (
+          <>
+            <p>Welcome, {user?.firstName}</p>
+            <SignOutButton>
+              <button style={{ marginBottom: "10px" }}>Sign Out</button>
+            </SignOutButton>
+          </>
+        )}
+      </div>
+
       <p style={{ color: "red" }}>
         ⚠ Do not enter real patient data. For testing only.
       </p>
 
       <p>{count} / 5 free analyses used</p>
 
-      {/* TEXT INPUT */}
+      {/* INPUT */}
       <textarea
         rows="7"
         style={{ width: "100%", marginBottom: "10px" }}
@@ -70,10 +92,9 @@ function App() {
 
       <br />
 
-      {/* ANALYZE BUTTON */}
       <button onClick={analyze}>Analyze</button>
 
-      {/* RESULT SECTION */}
+      {/* RESULT */}
       {result && (
         <div
           style={{
@@ -96,22 +117,15 @@ function App() {
           <div>
             <b>Pre-Adjudication Checks:</b>
             <ul>
-              <li>
-                Patient Eligible: {result.eligible ? "Yes" : "No"}
-              </li>
-              <li>
-                Valid Provider: {result.validProvider ? "Yes" : "No"}
-              </li>
-              <li>
-                Valid Codes: {result.validCodes ? "Yes" : "No"}
-              </li>
+              <li>Patient Eligible: {result.eligible ? "Yes" : "No"}</li>
+              <li>Valid Provider: {result.validProvider ? "Yes" : "No"}</li>
+              <li>Valid Codes: {result.validCodes ? "Yes" : "No"}</li>
             </ul>
           </div>
 
           <p><b>Final Decision:</b> {result.finalDecision}</p>
 
-          {/* Missing */}
-          {result.missing && result.missing.length > 0 && (
+          {result.missing?.length > 0 && (
             <>
               <p><b>Missing Elements:</b></p>
               <ul>
@@ -122,8 +136,7 @@ function App() {
             </>
           )}
 
-          {/* Suggestions */}
-          {result.suggestions && result.suggestions.length > 0 && (
+          {result.suggestions?.length > 0 && (
             <>
               <p><b>Suggestions:</b></p>
               <ul>
@@ -140,6 +153,15 @@ function App() {
           </p>
         </div>
       )}
+
+      {/* TERMS */}
+      <div style={{ marginTop: "30px", fontSize: "12px", color: "gray" }}>
+        <p>
+          ⚠ This tool is for educational/demo purposes only. Do not enter real patient data.
+        </p>
+
+        <a href="/terms">Terms of Service</a>
+      </div>
     </div>
   );
 }
