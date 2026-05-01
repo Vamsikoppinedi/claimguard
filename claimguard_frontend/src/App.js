@@ -15,6 +15,7 @@ function App() {
     localStorage.setItem("usageCount", count);
   }, [count]);
 
+  // 🔥 ANALYZE FUNCTION
   const analyze = async () => {
     if (!note.trim()) {
       alert("Please enter a note");
@@ -27,7 +28,7 @@ function App() {
     }
 
     if (count >= 5) {
-      alert("Free limit reached. Upgrade required.");
+      alert("Free limit reached");
       return;
     }
 
@@ -44,7 +45,6 @@ function App() {
       );
 
       const data = await response.json();
-
       console.log("API RESPONSE:", data);
 
       setResult(data);
@@ -55,11 +55,40 @@ function App() {
     }
   };
 
+  // 📄 PDF DOWNLOAD
+  const downloadPDF = async () => {
+    if (!result) return;
+
+    const { jsPDF } = await import("jspdf");
+    const doc = new jsPDF();
+
+    let y = 10;
+
+    doc.setFontSize(14);
+    doc.text("ClaimGuard AI Report", 10, y);
+    y += 10;
+
+    doc.setFontSize(10);
+    doc.text(`Risk: ${result.risk}`, 10, y);
+    y += 6;
+
+    doc.text(`Completeness: ${result.completeness}%`, 10, y);
+    y += 6;
+
+    doc.text(`Revenue: ${result.revenueImpact}`, 10, y);
+    y += 6;
+
+    doc.text(`Decision: ${result.finalDecision}`, 10, y);
+    y += 6;
+
+    doc.save("ClaimGuard_Report.pdf");
+  };
+
   return (
     <div style={{ maxWidth: "800px", margin: "40px auto", padding: "20px" }}>
       <h1>ClaimGuard AI</h1>
 
-      {/* AUTH SECTION */}
+      {/* AUTH */}
       <div style={{ marginBottom: "15px" }}>
         {!isSignedIn ? (
           <SignInButton>
@@ -69,14 +98,14 @@ function App() {
           <>
             <p>Welcome, {user?.firstName}</p>
             <SignOutButton>
-              <button style={{ marginBottom: "10px" }}>Sign Out</button>
+              <button>Sign Out</button>
             </SignOutButton>
           </>
         )}
       </div>
 
       <p style={{ color: "red" }}>
-        ⚠ Do not enter real patient data. For testing only.
+        ⚠ Do not enter real patient data. For demo only.
       </p>
 
       <p>{count} / 5 free analyses used</p>
@@ -108,8 +137,7 @@ function App() {
           <p><b>Risk:</b> {result.risk}</p>
 
           <p>
-            <b>Documentation Completeness:</b>{" "}
-            {result.completeness !== undefined ? result.completeness : 0}%
+            <b>Documentation Completeness:</b> {result.completeness}%
           </p>
 
           <p><b>Potential Revenue Loss:</b> {result.revenueImpact}</p>
@@ -147,10 +175,10 @@ function App() {
             </>
           )}
 
-          {/* DEBUG */}
-          <p style={{ fontSize: "10px", color: "gray" }}>
-            DEBUG: {JSON.stringify(result)}
-          </p>
+          {/* PDF BUTTON */}
+          <button onClick={downloadPDF} style={{ marginTop: "10px" }}>
+            Download PDF
+          </button>
         </div>
       )}
 
@@ -160,7 +188,13 @@ function App() {
           ⚠ This tool is for educational/demo purposes only. Do not enter real patient data.
         </p>
 
-        <a href="/terms">Terms of Service</a>
+        <a
+          href="https://www.termsfeed.com/live/sample-terms"
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          Terms of Service
+        </a>
       </div>
     </div>
   );
