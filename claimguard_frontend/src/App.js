@@ -1,119 +1,72 @@
-import React, { useState, useEffect } from "react";
-import { useUser, SignOutButton, SignInButton } from "@clerk/clerk-react";
+import React, { useState } from "react";
 
 function App() {
   const [note, setNote] = useState("");
   const [result, setResult] = useState(null);
 
-  const { isSignedIn, user } = useUser();
-
-  const [count, setCount] = useState(() => {
-    return Number(localStorage.getItem("usageCount")) || 0;
-  });
-
-  useEffect(() => {
-    localStorage.setItem("usageCount", count);
-  }, [count]);
-
-  // 🔥 ANALYZE FUNCTION
+  // ✅ API CALL
   const analyze = async () => {
-    if (!note.trim()) {
-      alert("Please enter a note");
-      return;
-    }
-
-    if (!isSignedIn) {
-      alert("Please sign in first");
-      return;
-    }
-
-    if (count >= 5) {
-      alert("Free limit reached");
-      return;
-    }
-
     try {
-      const response = await fetch(
-        "https://claimguard-nsbr.onrender.com/analyze-note",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({ note }),
-        }
-      );
+      const res = await fetch("https://claimguard-nsbr.onrender.com/analyze-note", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({ note })
+      });
 
-      const data = await response.json();
-      console.log("API RESPONSE:", data);
-
+      const data = await res.json();
       setResult(data);
-      setCount(count + 1);
+
     } catch (error) {
-      console.error(error);
-      alert("Error calling backend");
+      console.error("Error:", error);
+      alert("Backend not reachable");
     }
   };
 
-  // 📄 PDF DOWNLOAD
-  const downloadPDF = async () => {
+  // ✅ PDF DOWNLOAD
+  const downloadPDF = () => {
     if (!result) return;
 
-    const { jsPDF } = await import("jspdf");
-    const doc = new jsPDF();
+    const content = `
+ClaimGuard AI Report
 
-    let y = 10;
+Risk: ${result.risk}
+Documentation Completeness: ${result.completeness}%
+Revenue Impact: ${result.revenueImpact}
 
-    doc.setFontSize(14);
-    doc.text("ClaimGuard AI Report", 10, y);
-    y += 10;
+Pre-Adjudication:
+- Eligible: ${result.eligible}
+- Valid Provider: ${result.validProvider}
+- Valid Codes: ${result.validCodes}
 
-    doc.setFontSize(10);
-    doc.text(`Risk: ${result.risk}`, 10, y);
-    y += 6;
+Final Decision: ${result.finalDecision}
 
-    doc.text(`Completeness: ${result.completeness}%`, 10, y);
-    y += 6;
+Missing Elements: ${result.missing.length ? result.missing.join(", ") : "None"}
 
-    doc.text(`Revenue: ${result.revenueImpact}`, 10, y);
-    y += 6;
+Suggestions: ${result.suggestions.length ? result.suggestions.join(", ") : "None"}
+`;
 
-    doc.text(`Decision: ${result.finalDecision}`, 10, y);
-    y += 6;
+    const blob = new Blob([content], { type: "application/pdf" });
+    const url = window.URL.createObjectURL(blob);
 
-    doc.save("ClaimGuard_Report.pdf");
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "ClaimGuard_Report.pdf";
+    a.click();
   };
 
   return (
-    <div style={{ maxWidth: "800px", margin: "40px auto", padding: "20px" }}>
-      <h1>ClaimGuard AI</h1>
+    <div style={{ padding: "20px", maxWidth: "800px", margin: "auto" }}>
 
-      {/* AUTH */}
-      <div style={{ marginBottom: "15px" }}>
-        {!isSignedIn ? (
-          <SignInButton>
-            <button>Sign In</button>
-          </SignInButton>
-        ) : (
-          <>
-            <p>Welcome, {user?.firstName}</p>
-            <SignOutButton>
-              <button>Sign Out</button>
-            </SignOutButton>
-          </>
-        )}
-      </div>
+      <h2>ClaimGuard AI</h2>
 
       <p style={{ color: "red" }}>
-        ⚠ Do not enter real patient data. For demo only.
+        ⚠ Do not enter real patient data. This tool is for testing only.
       </p>
 
-      <p>{count} / 5 free analyses used</p>
-
-      {/* INPUT */}
       <textarea
-        rows="7"
-        style={{ width: "100%", marginBottom: "10px" }}
+        style={{ width: "100%", height: "120px", marginBottom: "10px" }}
         placeholder="Enter patient note..."
         value={note}
         onChange={(e) => setNote(e.target.value)}
@@ -123,22 +76,15 @@ function App() {
 
       <button onClick={analyze}>Analyze</button>
 
-      {/* RESULT */}
+      {/* ✅ RESULT */}
       {result && (
-        <div
-          style={{
-            marginTop: "20px",
-            border: "1px solid #ccc",
-            padding: "10px",
-          }}
-        >
+        <div style={{ marginTop: "20px", border: "1px solid #ccc", padding: "15px" }}>
+
           <h3>Result</h3>
 
           <p><b>Risk:</b> {result.risk}</p>
 
-          <p>
-            <b>Documentation Completeness:</b> {result.completeness}%
-          </p>
+          <p><b>Documentation Completeness:</b> {result.completeness}%</p>
 
           <p><b>Potential Revenue Loss:</b> {result.revenueImpact}</p>
 
@@ -153,49 +99,43 @@ function App() {
 
           <p><b>Final Decision:</b> {result.finalDecision}</p>
 
-          {result.missing?.length > 0 && (
-            <>
-              <p><b>Missing Elements:</b></p>
-              <ul>
-                {result.missing.map((item, i) => (
-                  <li key={i}>{item}</li>
-                ))}
-              </ul>
-            </>
-          )}
+          {/* ✅ ALWAYS SHOW MISSING */}
+          <div>
+            <b>Missing Elements:</b>
+            <ul>
+              {result.missing.length > 0
+                ? result.missing.map((item, i) => <li key={i}>{item}</li>)
+                : <li>None</li>}
+            </ul>
+          </div>
 
-          {result.suggestions?.length > 0 && (
-            <>
-              <p><b>Suggestions:</b></p>
-              <ul>
-                {result.suggestions.map((item, i) => (
-                  <li key={i}>{item}</li>
-                ))}
-              </ul>
-            </>
-          )}
+          {/* ✅ ALWAYS SHOW SUGGESTIONS */}
+          <div>
+            <b>Suggestions:</b>
+            <ul>
+              {result.suggestions.length > 0
+                ? result.suggestions.map((item, i) => <li key={i}>{item}</li>)
+                : <li>No suggestions</li>}
+            </ul>
+          </div>
 
-          {/* PDF BUTTON */}
+          {/* ✅ PDF BUTTON */}
           <button onClick={downloadPDF} style={{ marginTop: "10px" }}>
             Download PDF
           </button>
+
         </div>
       )}
 
-      {/* TERMS */}
+      {/* ✅ FOOTER */}
       <div style={{ marginTop: "30px", fontSize: "12px", color: "gray" }}>
-        <p>
-          ⚠ This tool is for educational/demo purposes only. Do not enter real patient data.
-        </p>
-
-        <a
-          href="https://www.termsfeed.com/live/sample-terms"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
+        ⚠ This tool is for educational/demo purposes only. Do not enter real patient data.
+        <br />
+        <a href="/terms" target="_blank" rel="noopener noreferrer">
           Terms of Service
         </a>
       </div>
+
     </div>
   );
 }
