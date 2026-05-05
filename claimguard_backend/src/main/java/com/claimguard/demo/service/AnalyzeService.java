@@ -78,9 +78,13 @@ public class AnalyzeService {
 
         // ✅ Risk
         String risk;
-        if (present <= 2) risk = "HIGH";
-        else if (present <= 4) risk = "MEDIUM";
-        else risk = "LOW";
+if (present <= 1) {
+    risk = "HIGH";
+} else if (present <= 3) {
+    risk = "MEDIUM";
+} else {
+    risk = "LOW";
+}
 
         // ✅ Pre-checks
         boolean eligible = text.contains("insured");
