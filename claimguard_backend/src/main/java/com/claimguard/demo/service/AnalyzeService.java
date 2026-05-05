@@ -87,17 +87,23 @@ if (present <= 1) {
 }
 
         // ✅ Pre-checks
-        boolean eligible = text.contains("insured");
+        boolean eligible = text.contains("insured")||
+        text.contains("covered")||
+        text.contains("insurance");
 
         boolean validProvider =
                 text.contains("doctor") ||
                 text.contains("provider") ||
-                text.contains("physician");
+                text.contains("physician")||
+                text.contains("exam")||
+                text.contains("evaluated")
+                ;
 
         boolean validCodes =
                 text.contains("icd") ||
                 text.contains("cpt") ||
-                text.contains("code");
+                text.contains("code") ||
+                text.contains("diagnosis");
 
         // ✅ Final Decision
         String finalDecision;
