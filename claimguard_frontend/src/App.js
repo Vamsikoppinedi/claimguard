@@ -2,10 +2,12 @@ import React, { useState } from "react";
 import jsPDF from "jspdf";
 
 function App() {
+  const { user } = useUser();
+const { signOut } = useClerk();
   const [note, setNote] = useState("");
   const [result, setResult] = useState(null);
 
-  // ✅ API CALL
+  // API CALL
   const analyze = async () => {
     try {
       const res = await fetch("https://claimguard-nsbr.onrender.com/analyze-note", {
@@ -25,7 +27,7 @@ function App() {
     }
   };
 
-  // ✅ PDF DOWNLOAD
+  // PDF DOWNLOAD
   const downloadPDF = () => {
     if (!result) return;
   
@@ -116,7 +118,15 @@ function App() {
 
   return (
     <div style={{ padding: "20px", maxWidth: "800px", margin: "auto" }}>
+    {user && (
+  <div style={{ marginBottom: "20px" }}>
+    <p>Welcome, {user.fullName}</p>
 
+    <button onClick={() => signOut()}>
+      Sign Out
+    </button>
+  </div>
+)}
       <h2>ClaimGuard AI</h2>
 
       <p style={{ color: "red" }}>
@@ -134,7 +144,7 @@ function App() {
 
       <button onClick={analyze}>Analyze</button>
 
-      {/* ✅ RESULT */}
+      {/* RESULT */}
       {result && (
         <div style={{ marginTop: "20px", border: "1px solid #ccc", padding: "15px" }}>
 
@@ -157,7 +167,7 @@ function App() {
 
           <p><b>Final Decision:</b> {result.finalDecision}</p>
 
-          {/* ✅ ALWAYS SHOW MISSING */}
+          {/* ALWAYS SHOW MISSING */}
           <div>
             <b>Missing Elements:</b>
             <ul>
@@ -167,7 +177,7 @@ function App() {
             </ul>
           </div>
 
-          {/* ✅ ALWAYS SHOW SUGGESTIONS */}
+          {/* ALWAYS SHOW SUGGESTIONS */}
           <div>
             <b>Suggestions:</b>
             <ul>
@@ -177,7 +187,7 @@ function App() {
             </ul>
           </div>
 
-          {/* ✅ PDF BUTTON */}
+          {/* PDF BUTTON */}
           <button onClick={downloadPDF} style={{ marginTop: "10px" }}>
             Download PDF
           </button>
@@ -185,11 +195,11 @@ function App() {
         </div>
       )}
 
-      {/* ✅ FOOTER */}
+      {/* FOOTER */}
       <div style={{ marginTop: "30px", fontSize: "12px", color: "gray" }}>
         ⚠ This tool is for educational/demo purposes only. Do not enter real patient data.
         <br />
-        <a href="/terms" target="_blank" rel="noopener noreferrer">
+        <a href="/terms" target="/Terms.js" rel="noopener noreferrer">
           Terms of Service
         </a>
       </div>
