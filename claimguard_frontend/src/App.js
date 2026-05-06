@@ -1,3 +1,9 @@
+import {
+  SignedIn,
+  SignedOut,
+  SignInButton,
+  UserButton
+} from "@clerk/clerk-react";
 import React, { useState } from "react";
 import {
   BrowserRouter as Router,
@@ -180,6 +186,16 @@ function Home() {
           }}
         >
           <div>
+          <div style={{ marginBottom: "20px" }}>
+  <SignedOut>
+    <SignInButton />
+  </SignedOut>
+
+  <SignedIn>
+    <UserButton />
+  </SignedIn>
+</div>
+           
             <h1
               style={{
                 margin: 0,
