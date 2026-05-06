@@ -8,7 +8,7 @@ import {
 } from "@clerk/clerk-react";
 
 const PUBLISHABLE_KEY =
-  "YOUR_CLERK_PUBLISHABLE_KEY";
+  "pk_test_aHVtYW5lLWNyYXlmaXNoLTQ3LmNsZXJrLmFjY291bnRzLmRldiQ";
 
 const root = ReactDOM.createRoot(
   document.getElementById("root")
@@ -16,7 +16,7 @@ const root = ReactDOM.createRoot(
 
 root.render(
   <React.StrictMode>
-    <ClerkProvider publishableKey={pk_test_aHVtYW5lLWNyYXlmaXNoLTQ3LmNsZXJrLmFjY291bnRzLmRldiQ}>
+    <ClerkProvider publishableKey={PUBLISHABLE_KEY}>
       <App />
     </ClerkProvider>
   </React.StrictMode>

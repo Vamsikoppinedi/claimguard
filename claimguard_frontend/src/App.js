@@ -12,14 +12,7 @@ import {
   Link,
 } from "react-router-dom";
 
-import {
-  ClerkProvider,
-  SignedIn,
-  SignedOut,
-  SignIn,
-  UserButton,
-  useUser,
-} from "@clerk/clerk-react";
+
 
 import { jsPDF } from "jspdf";
 
