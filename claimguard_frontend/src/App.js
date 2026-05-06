@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import jsPDF from "jspdf";
 
 function App() {
   const [note, setNote] = useState("");
@@ -27,33 +28,90 @@ function App() {
   // ✅ PDF DOWNLOAD
   const downloadPDF = () => {
     if (!result) return;
-
-    const content = `
-ClaimGuard AI Report
-
-Risk: ${result.risk}
-Documentation Completeness: ${result.completeness}%
-Revenue Impact: ${result.revenueImpact}
-
-Pre-Adjudication:
-- Eligible: ${result.eligible}
-- Valid Provider: ${result.validProvider}
-- Valid Codes: ${result.validCodes}
-
-Final Decision: ${result.finalDecision}
-
-Missing Elements: ${result.missing.length ? result.missing.join(", ") : "None"}
-
-Suggestions: ${result.suggestions.length ? result.suggestions.join(", ") : "None"}
-`;
-
-    const blob = new Blob([content], { type: "application/pdf" });
-    const url = window.URL.createObjectURL(blob);
-
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = "ClaimGuard_Report.pdf";
-    a.click();
+  
+    const doc = new jsPDF();
+  
+    let y = 20;
+  
+    doc.setFontSize(18);
+    doc.text("ClaimGuard AI Report", 20, y);
+  
+    y += 15;
+  
+    doc.setFontSize(12);
+  
+    doc.text(`Risk: ${result.risk}`, 20, y);
+    y += 10;
+  
+    doc.text(
+      `Documentation Completeness: ${result.completeness}%`,
+      20,
+      y
+    );
+    y += 10;
+  
+    doc.text(
+      `Potential Revenue Loss: ${result.revenueImpact}`,
+      20,
+      y
+    );
+    y += 15;
+  
+    doc.text("Pre-Adjudication Checks:", 20, y);
+    y += 10;
+  
+    doc.text(
+      `Patient Eligible: ${result.eligible ? "Yes" : "No"}`,
+      25,
+      y
+    );
+    y += 10;
+  
+    doc.text(
+      `Valid Provider: ${result.validProvider ? "Yes" : "No"}`,
+      25,
+      y
+    );
+    y += 10;
+  
+    doc.text(
+      `Valid Codes: ${result.validCodes ? "Yes" : "No"}`,
+      25,
+      y
+    );
+    y += 15;
+  
+    doc.text(`Final Decision: ${result.finalDecision}`, 20, y);
+    y += 15;
+  
+    doc.text("Missing Elements:", 20, y);
+    y += 10;
+  
+    if (result.missing.length > 0) {
+      result.missing.forEach((item) => {
+        doc.text(`- ${item}`, 25, y);
+        y += 10;
+      });
+    } else {
+      doc.text("None", 25, y);
+      y += 10;
+    }
+  
+    y += 10;
+  
+    doc.text("Suggestions:", 20, y);
+    y += 10;
+  
+    if (result.suggestions.length > 0) {
+      result.suggestions.forEach((item) => {
+        doc.text(`- ${item}`, 25, y);
+        y += 10;
+      });
+    } else {
+      doc.text("None", 25, y);
+    }
+  
+    doc.save("ClaimGuard_Report.pdf");
   };
 
   return (
